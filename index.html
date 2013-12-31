@@ -32,7 +32,7 @@
       
       var margin = {top: 40, right: 40, bottom: 40, left:40},
       width = 600,
-      height = 500;
+      height = 200;
       
       var x = d3.time.scale()
       .domain([new Date(data[0].date), d3.time.day.offset(new Date(data[data.length - 1].date), 1)])
@@ -61,7 +61,9 @@
       .attr('class', 'letter')
       .attr('cx', function(d) { return x(new Date(d.date)); })
       .attr('cy', function(d) { return height -100 })
-      .attr('r', 10);
+      .attr('r', 10)
+      .attr('fill', '#ffffff')
+      .attr('stroke', '#000000');
       
       svg.append('g')
       .attr('class', 'x axis')

@@ -38,9 +38,6 @@
       .domain([new Date(data[0].date), d3.time.day.offset(new Date(data[data.length - 1].date), 1)])
       .rangeRound([0, width - margin.left - margin.right]);
       
-      var y = d3.scale.linear()
-      .domain([0, d3.max(data, function(d) { return d.total; })])
-      .range([height - margin.top - margin.bottom, 0]);
       
       var xAxis = d3.svg.axis()
       .scale(x)
@@ -50,10 +47,6 @@
       .tickSize(0)
       .tickPadding(8);
       
-      var yAxis = d3.svg.axis()
-      .scale(y)
-      .orient('left')
-      .tickPadding(8);
       
       var svg = d3.select('#dateline').append('svg')
       .attr('class', 'chart')
@@ -75,9 +68,6 @@
       .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
       .call(xAxis);
       
-      svg.append('g')
-      .attr('class', 'y axis')
-      .call(yAxis);
       </script>
    </body>
 </html>

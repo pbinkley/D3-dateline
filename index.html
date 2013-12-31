@@ -44,9 +44,8 @@
       .orient('bottom')
       .ticks(d3.time.days, 1)
       .tickFormat(d3.time.format('%a %d'))
-      .tickSize(0)
+      .tickSize(5)
       .tickPadding(8);
-      
       
       var svg = d3.select('#dateline').append('svg')
       .attr('class', 'chart')
@@ -59,16 +58,24 @@
       .data(data)
       .enter().append('circle')
       .attr('class', 'letter')
-      .attr('cx', function(d) { return x(new Date(d.date)); })
+      .attr('cx', function(d) { return x(new Date(d.date)) +20; })
       .attr('cy', function(d) { return height -100 })
       .attr('r', 10)
-      .attr('fill', '#ffffff')
+      .attr('fill', '#ffffd0')
       .attr('stroke', '#000000');
       
       svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
       .call(xAxis);
+
+// To rotate labels, from https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
+//      .selectAll("text")
+//      .attr("transform", function(d) {
+//        return "rotate(90)translate(" + this.getBBox().height/2 + "," +
+//             this.getBBox().width/2 + ")";
+//      });
+      
       
       </script>
    </body>

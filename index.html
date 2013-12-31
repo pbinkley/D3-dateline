@@ -22,7 +22,7 @@
    </head>
    <body>
       <h1>D3 Dateline</h1>
-      <div id="dateline" style="border: 1px solid black; width: 600px"></div>
+      <div id="dateline" style="border: 1px solid black; width: 600px§"></div>
       
       
       
@@ -64,12 +64,11 @@
       
       svg.selectAll('.chart')
       .data(data)
-      .enter().append('rect')
-      .attr('class', 'bar')
-      .attr('x', function(d) { return x(new Date(d.date)); })
-      .attr('y', function(d) { return height - margin.top - margin.bottom - (height - margin.top - margin.bottom - y(d.total)) })
-      .attr('width', 10)
-      .attr('height', function(d) { return height - margin.top - margin.bottom - y(d.total) });
+      .enter().append('circle')
+      .attr('class', 'letter')
+      .attr('cx', function(d) { return x(new Date(d.date)); })
+      .attr('cy', function(d) { return height -100 })
+      .attr('r', 10);
       
       svg.append('g')
       .attr('class', 'x axis')

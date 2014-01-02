@@ -28,11 +28,18 @@
       
       <script type="text/javascript">
       
-      var data = [{"date":"2012-03-20","total":3},{"date":"2012-03-21","total":8},{"date":"2012-03-22","total":2},{"date":"2012-03-23","total":10},{"date":"2012-03-24","total":3},{"date":"2012-03-25","total":20},{"date":"2012-03-26","total":12}];
+      var data = [{"date":"2012-03-20","total":3},
+      {"date":"2012-03-23","total":8},
+      {"date":"2012-03-22","total":2},
+      {"date":"2012-03-23","total":10},
+      {"date":"2012-03-23","total":3},
+      {"date":"2012-03-25","total":20},
+      {"date":"2012-03-26","total":12}];
       
       var margin = {top: 40, right: 40, bottom: 40, left:40},
       width = 600,
-      height = 200;
+      height = 200,
+      radius = 10;
       
       var x = d3.time.scale()
       .domain([new Date(data[0].date), d3.time.day.offset(new Date(data[data.length - 1].date), 1)])
@@ -54,13 +61,20 @@
       .append('g')
       .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
       
+      var stackcounts = [];
+      
       svg.selectAll('.chart')
       .data(data)
       .enter().append('circle')
-      .attr('class', 'letter')
+      .attr('class', function(d) { return "letter d" + d.date; })
       .attr('cx', function(d) { return x(new Date(d.date)) +20; })
-      .attr('cy', function(d) { return height -100 })
-      .attr('r', 10)
+      .attr('cy', function(d) {
+         // count the letters already stacked on this date
+         var previousLetters = (stackcounts['d'+d.date]) ? stackcounts['d'+d.date] : 0;
+         stackcounts['d'+d.date] = previousLetters+1;
+         return height-100-(previousLetters*radius*2)-previousLetters; 
+       })
+      .attr('r', radius)
       .attr('fill', '#ffffd0')
       .attr('stroke', '#000000');
       

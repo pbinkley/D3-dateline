@@ -11,24 +11,46 @@
 		    border: 1px solid black;
 		    width: 600px;
 		  }
-
 		  .axis path, .axis line {
 		    fill: none;
 		    stroke: #000;
 		    shape-rendering: crispEdges;
 		  }
-
+		  .letter {
+		  	fill: #ffffd0;
+	    	stroke: #000000;
+	    	stroke-width: 2
+		  }
+		  .link {
+		  	fill:none; 
+		  	stroke:red; 
+		  	stroke-width:3 
+		  }
 		  .bar {
 		    fill: steelblue;
+		  }
+		  .fromR {
+		  	fill: green;
+		  }
+		  .fromF {
+		    fill: white;
 		  }
      </style>
 
 	<script type="text/javascript">
 	window.onload = function(){
-  		var width = 600,
-      height = 200,
+  	var width = 600,
+    	height = 200,
 		margin = {top: 40, right: 40, bottom: 40, left:40},
-      radius = 10;
+		radius = 10;
+
+	// ctlx and ctly are the offsets for the control points for the Bezier curve.
+	//   ctly is subtracted from source and target, to place control point
+	//      above the source/target
+	//   ctlx is added to source and subtracted from target, to place control point
+	//      so as to flatten the curve slightly
+	var ctlx = 10;
+	var ctly = 35;
 
       
 	var svg = d3.select("#svgContent")
@@ -41,18 +63,18 @@
                   
 	var dataSet = {
 		nodes: [
-         {"name": "Letter 1","date":"2012-03-20","id":1},
-         {"name": "Letter 2","date":"2012-03-23","id":2},
-         {"name": "Letter 3","date":"2012-03-22","id":3},
-         {"name": "Letter 4","date":"2012-03-23","id":4},
-         {"name": "Letter 5","date":"2012-03-23","id":5},
-         {"name": "Letter 6","date":"2012-03-25","id":6},
-         {"name": "Letter 7","date":"2012-03-26","id":7}
+         {"name": "Letter 1","date":"2012-03-20","id":1,"from":"R"},
+         {"name": "Letter 2","date":"2012-03-23","id":2,"from":"F"},
+         {"name": "Letter 3","date":"2012-03-22","id":3,"from":"R"},
+         {"name": "Letter 4","date":"2012-03-23","id":4,"from":"F"},
+         {"name": "Letter 5","date":"2012-03-23","id":5,"from":"R"},
+         {"name": "Letter 6","date":"2012-03-25","id":6,"from":"F"},
+         {"name": "Letter 7","date":"2012-03-26","id":7,"from":"R"}
       ],
       
-      edges: [
-         {"source":1, "target":5, "type": "answeredby"},
-         {"source":0, "target":5, "type": "answeredby"}
+      links: [
+         {"source":1, "target":3, "type": "answeredby"},
+         {"source":0, "target":6, "type": "answeredby"}
       ]
 			
 		};
@@ -98,49 +120,69 @@
 
 		var force = self.force = d3.layout.force()
 			.nodes(dataSet.nodes)
-			.links(dataSet.edges)
+			.links(dataSet.links)
 			.gravity(0.05)
             .distance(50)
             .charge(-50)
 			.size([width,height])
 			.start();
 
+		function curve(d) {
+			// Bezier curve
+			// we assume source is earlier than target or on same day
+			var c, upper, lower;
+			if (d.source.x == d.target.x) {
+				// same day - control points on right - need to start with upper
+				if (d.source.y < d.target.y) {
+					upper = d.source;
+					lower = d.target;
+				}
+				else {
+					upper = d.target;
+					lower = d.source;
+				}
+				c = "M" + upper.x + "," + upper.y +
+					" C" + (upper.x + ctly) + "," + (upper.y - ctlx) +
+					" " + (lower.x + ctly) + "," + (lower.y + ctlx) +
+					" " + lower.x + "," + lower.y;
+			}
+			else
+				// different days - control points above
+				c = "M" + d.source.x + "," + d.source.y +
+					" C" + (d.source.x + ctlx) + "," + (d.source.y - ctly) +
+					" " + (d.target.x - ctlx) + "," + (d.target.y - ctly) +
+					" " + d.target.x + "," + d.target.y;
+			return c;
+		}
+
 		var link = svg.selectAll(".link")
-			.data(dataSet.edges)
-			.enter().append("line")
-			.attr("class", "link")
-			.attr("d", line)
-			.attr("fill", "none")
-			.attr("stroke", "black")
-			.attr("x1", function(d) { return d.source.x; })
-			.attr("y1", function(d) { return d.source.y; })
-			.attr("x2", function(d) { return d.target.x; })
-			.attr("y2", function(d) { return d.target.y; });
-  
+				.data(dataSet.links)
+			.enter().append("svg:path")
+			.attr("d", function(d) {
+				return curve(d);
+			})
+			.attr("class", "link");
+
        var node = svg.selectAll("circle")
 			.data(dataSet.nodes)
 		.enter().append("svg:circle")
 			.attr('id', function(d) {return "n" + d.id; })
-			.attr('class', function(d) { return "letter d" + d.date; })
-			.attr('r', radius)
-			.attr('fill', '#ffffd0')
-	    	.attr('stroke', '#000000');
-         //.append("svg:title")
-		//	.text(function(d) { return d.date; });
+			.attr('class', function(d) { return "letter d" + d.date + " from" + d.from; })
+			.attr('r', radius);
+         node.append("svg:title")
+			.text(function(d) { return d.name; });
 
   
 		force.on("tick", tick);
 
 		function tick() {
-          link.attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
-
-		node.attr("cx", function(d) { return d.x; })
-			.attr("cy", function(d) { return d.y; });
-		}
-};
+			link.attr("d", function(d) {
+				return curve(d);
+			});
+			node.attr("cx", function(d) { return d.x; })
+				.attr("cy", function(d) { return d.y; });
+			}
+		};
 </script>
 </head>
 <body>

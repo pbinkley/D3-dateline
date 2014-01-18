@@ -1,50 +1,68 @@
 <!DOCTYPE html>
-<html>
-   <head>
-      <title>D3 Dateline</title>
-      <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-     <style type="text/css">
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>D3 Dateline</title>
+	<script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <style type="text/css">
           .chart {
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-  }
+		    font-family: Arial, sans-serif;
+		    font-size: 10px;
+		    border: 1px solid black;
+		    width: 600px;
+		  }
 
-  .axis path, .axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-  }
+		  .axis path, .axis line {
+		    fill: none;
+		    stroke: #000;
+		    shape-rendering: crispEdges;
+		  }
 
-  .bar {
-    fill: steelblue;
-  }
+		  .bar {
+		    fill: steelblue;
+		  }
      </style>
-   </head>
-   <body>
-      <h1>D3 Dateline</h1>
-      <div id="dateline" style="border: 1px solid black; width: 600px§"></div>
-      
-      
-      
-      <script type="text/javascript">
-      
-      var data = [{"date":"2012-03-20","total":3},
-      {"date":"2012-03-23","total":8},
-      {"date":"2012-03-22","total":2},
-      {"date":"2012-03-23","total":10},
-      {"date":"2012-03-23","total":3},
-      {"date":"2012-03-25","total":20},
-      {"date":"2012-03-26","total":12}];
-      
-      var margin = {top: 40, right: 40, bottom: 40, left:40},
-      width = 600,
+
+	<script type="text/javascript">
+	window.onload = function(){
+  		var width = 600,
       height = 200,
+		margin = {top: 40, right: 40, bottom: 40, left:40},
       radius = 10;
+
       
+	var svg = d3.select("#svgContent")
+                  .append("svg")
+                  .attr("width", width)
+                  .attr("height", height)
+                  .attr('preserveAspectRatio', 'xMinYMin slice') 
+                  .append('g');
+
+                  
+	var dataSet = {
+		nodes: [
+         {"name": "Letter 1","date":"2012-03-20","id":1},
+         {"name": "Letter 2","date":"2012-03-23","id":2},
+         {"name": "Letter 3","date":"2012-03-22","id":3},
+         {"name": "Letter 4","date":"2012-03-23","id":4},
+         {"name": "Letter 5","date":"2012-03-23","id":5},
+         {"name": "Letter 6","date":"2012-03-25","id":6},
+         {"name": "Letter 7","date":"2012-03-26","id":7}
+      ],
+      
+      edges: [
+         {"source":1, "target":5, "type": "answeredby"},
+         {"source":0, "target":5, "type": "answeredby"}
+      ]
+			
+		};
+		
+		
+		var line = d3.svg.line()
+
       var x = d3.time.scale()
-      .domain([new Date(data[0].date), d3.time.day.offset(new Date(data[data.length - 1].date), 1)])
+      .domain([new Date(dataSet.nodes[0].date), d3.time.day.offset(new Date(dataSet.nodes[dataSet.nodes.length - 1].date), 1)])
       .rangeRound([0, width - margin.left - margin.right]);
-      
       
       var xAxis = d3.svg.axis()
       .scale(x)
@@ -53,44 +71,81 @@
       .tickFormat(d3.time.format('%a %d'))
       .tickSize(5)
       .tickPadding(8);
-      
-      var svg = d3.select('#dateline').append('svg')
-      .attr('class', 'chart')
-      .attr('width', width)
-      .attr('height', height)
-      .append('g')
-      .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
-      
-      var stackcounts = [];
-      
-      svg.selectAll('.chart')
-      .data(data)
-      .enter().append('circle')
-      .attr('class', function(d) { return "letter d" + d.date; })
-      .attr('cx', function(d) { return x(new Date(d.date)) +20; })
-      .attr('cy', function(d) {
-         // count the letters already stacked on this date
-         var previousLetters = (stackcounts['d'+d.date]) ? stackcounts['d'+d.date] : 0;
-         stackcounts['d'+d.date] = previousLetters+1;
-         return height-100-(previousLetters*radius*2)-previousLetters; 
-       })
-      .attr('r', radius)
-      .attr('fill', '#ffffd0')
-      .attr('stroke', '#000000');
-      
-      svg.append('g')
+
+     svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
       .call(xAxis);
 
-// To rotate labels, from https://groups.google.com/forum/?fromgroups#!topic/d3-js/heOBPQF3sAY
-//      .selectAll("text")
-//      .attr("transform", function(d) {
-//        return "rotate(90)translate(" + this.getBBox().height/2 + "," +
-//             this.getBBox().width/2 + ")";
-//      });
-      
-      
-      </script>
-   </body>
+		// add fixed coords to nodes
+		var stackcounts = [];
+
+		 dataSet.nodes.forEach(function(node) {
+		 // x is always over the sortdate
+		 // y is stacked on any letters already on that date if the date is precise,
+		 //   otherwise at top of graph to allow it to be pulled into position
+			node.x = x(new Date(node.date)) +20; 
+    	 	if (node.id != 7) {
+		    	var previousLetters = (stackcounts['d'+node.date]) ? stackcounts['d'+node.date] : 0;
+        	 	stackcounts['d'+node.date] = previousLetters+1;
+         		node.y = height-100-(previousLetters*radius*2)-previousLetters; 
+	         	node.fixed = true;
+         	}
+         	else {
+         		node.y = 0;
+         	}
+		});
+
+		var force = self.force = d3.layout.force()
+			.nodes(dataSet.nodes)
+			.links(dataSet.edges)
+			.gravity(0.05)
+            .distance(50)
+            .charge(-50)
+			.size([width,height])
+			.start();
+
+		var link = svg.selectAll(".link")
+			.data(dataSet.edges)
+			.enter().append("line")
+			.attr("class", "link")
+			.attr("d", line)
+			.attr("fill", "none")
+			.attr("stroke", "black")
+			.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; });
+  
+       var node = svg.selectAll("circle")
+			.data(dataSet.nodes)
+		.enter().append("svg:circle")
+			.attr('id', function(d) {return "n" + d.id; })
+			.attr('class', function(d) { return "letter d" + d.date; })
+			.attr('r', radius)
+			.attr('fill', '#ffffd0')
+	    	.attr('stroke', '#000000');
+         //.append("svg:title")
+		//	.text(function(d) { return d.date; });
+
+  
+		force.on("tick", tick);
+
+		function tick() {
+          link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+		node.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) { return d.y; });
+		}
+};
+</script>
+</head>
+<body>
+
+	<div id="svgContent" class="chart"></div>
+  
+</body>
 </html>

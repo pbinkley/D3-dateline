@@ -18,9 +18,14 @@
 		  }
 		  .letter {
 		  	fill: #ffffd0;
-	    	stroke: #000000;
 	    	stroke-width: 2
 		  }
+		  .precise {
+			stroke: #000000;
+		}
+		.notprecise {
+			stroke: #ff2c00;
+		}
 		  .link {
 		  	fill:none; 
 		  	stroke:grey; 
@@ -35,10 +40,10 @@
 		    fill: steelblue;
 		  }
 		  .fromR {
-		  	fill: green;
+		  	fill: #dca2ea;
 		  }
 		  .fromF {
-		    fill: white;
+		    fill: #d7faaa;
 		  }
      </style>
 
@@ -81,20 +86,23 @@ svg.append("svg:defs").selectAll("marker")
     
 	var dataSet = {
 		nodes: [
-         {"name": "Letter 1","date":"2012-03-20","id":1,"from":"R"},
-         {"name": "Letter 2","date":"2012-03-23","id":2,"from":"F"},
-         {"name": "Letter 3","date":"2012-03-22","id":3,"from":"R"},
-         {"name": "Letter 4","date":"2012-03-23","id":4,"from":"R"},
-         {"name": "Letter 5","date":"2012-03-23","id":5,"from":"R"},
-         {"name": "Letter 6","date":"2012-03-25","id":6,"from":"F"},
-         {"name": "Letter 7","date":"2012-03-26","id":7,"from":"F"}
+         {"name": "Letter 1","date":"2012-03-20","id":1,"from":"R","type":"fixed"},
+         {"name": "Letter 2","date":"2012-03-23","id":2,"from":"F","type":"fixed"},
+         {"name": "Letter 3","date":"2012-03-22","id":3,"from":"R","type":"hasAnswer"},
+         {"name": "Letter 4","date":"2012-03-23","id":4,"from":"R","type":"fixed"},
+         {"name": "Letter 5","date":"2012-03-23","id":5,"from":"R","type":"fixed"},
+         {"name": "Letter 6","date":"2012-03-25","id":6,"from":"F","type":"fixed"},
+         {"name": "Letter 7","date":"2012-03-26","id":7,"from":"F","type":"both"},
+         {"name": "Letter 8","date":"2012-03-26","id":7,"from":"R","type":"free"},
+         {"name": "Letter 9","date":"2012-03-25","id":7,"from":"R","type":"isAnswer"}
       ],
       
       links: [
          {"source":1, "target":3, "type": "answeredby"},
          {"source":0, "target":6, "type": "answeredby"},
          {"source":6, "target":4, "type": "answeredby"},
-         {"source":2, "target":5, "type": "answeredby"}
+         {"source":2, "target":5, "type": "answered§by"},
+         {"source":5, "target":8, "type": "answeredby"}
       ]
 			
 		};
@@ -127,7 +135,7 @@ svg.append("svg:defs").selectAll("marker")
 		 // y is stacked on any letters already on that date if the date is precise,
 		 //   otherwise at top of graph to allow it to be pulled into position
 			node.x = x(new Date(node.date)) +20; 
-    	 	if (node.id != 7) {
+    	 	if (node.type == "fixed") {
 		    	var previousLetters = (stackcounts['d'+node.date]) ? stackcounts['d'+node.date] : 0;
         	 	stackcounts['d'+node.date] = previousLetters+1;
          		node.y = height-100-(previousLetters*radius*2)-previousLetters; 
@@ -141,9 +149,9 @@ svg.append("svg:defs").selectAll("marker")
 		var force = self.force = d3.layout.force()
 			.nodes(dataSet.nodes)
 			.links(dataSet.links)
-			.gravity(0.05)
+			.gravity(0)
             .distance(50)
-            .charge(-50)
+            .charge(0)
 			.size([width,height])
 			.start();
 
@@ -189,7 +197,7 @@ svg.append("svg:defs").selectAll("marker")
 			.data(dataSet.nodes)
 		.enter().append("svg:circle")
 			.attr('id', function(d) {return "n" + d.id; })
-			.attr('class', function(d) { return "letter d" + d.date + " from" + d.from; })
+			.attr('class', function(d) { return "letter d" + d.date + " from" + d.from + " " + ((d.type == "fixed") ? "precise" : "notprecise"); })
 			.attr('r', radius);
          node.append("svg:title")
 			.text(function(d) { return d.name; });
@@ -197,14 +205,27 @@ svg.append("svg:defs").selectAll("marker")
   
 		force.on("tick", tick);
 
-		function tick() {
+		function tick(e) {
+			// artificial gravity, based on node type
+			var k = 20 * e.alpha;
+			dataSet.nodes.forEach(function(o, i) {
+				if (o.type == "isAnswer") // move right
+					o.x += k;
+				else if (o.type == "hasAnswer") // move left
+					o.x += -k;
+				else if (o.type == "free") // move up
+					o.y += -k;
+			});
+
+			// constrain to bounding box
+			node.attr("cx", function(d) { return d.x = Math.max(15, Math.min(width - 15, d.x)); })
+				.attr("cy", function(d) { return d.y = Math.max(15, Math.min(height - 15, d.y)); });
+
 			link.attr("d", function(d) {
 				return curve(d);
             });			
-            node.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; });
-			}
 		};
+	};
 </script>
 </head>
 <body>

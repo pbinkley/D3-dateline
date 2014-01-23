@@ -16,17 +16,17 @@ function loadchart(div){
 	var dataSet = {
 	// nodes should be in date order - time scale domain depends on first and last node
 		nodes: [
-         {"name": "Letter 1","date":"2012-03-20","id":1,"from":"R","type":"fixed"},
-         {"name": "Letter 2","date":"2012-03-23","id":2,"from":"F","type":"fixed"},
-         {"name": "Letter 3","date":"2012-03-22","id":3,"from":"R","type":"hasAnswer"},
-         {"name": "Letter 4","date":"2012-03-23","id":4,"from":"R","type":"fixed"},
-         {"name": "Letter 5","date":"2012-03-23","id":5,"from":"R","type":"fixed"},
-         {"name": "Letter 6","date":"2012-03-25","id":6,"from":"F","type":"fixed"},
-         {"name": "Letter 7","date":"2012-03-26","id":7,"from":"F","type":"both"},
-         {"name": "Letter 8","date":"2012-03-23","id":7,"from":"R","type":"free"},
-         {"name": "Letter 9","date":"2012-03-25","id":7,"from":"R","type":"isAnswer"},
-         {"name": "Letter 8a","date":"2012-03-23","id":7,"from":"R","type":"free"},
-         {"name": "Letter 8b","date":"2012-03-26","id":7,"from":"R","type":"free"},
+         {"name": "Letter 1","date":"2012-03-27","id":1,"from":"R","type":"fixed"},
+         {"name": "Letter 2","date":"2012-03-30","id":2,"from":"F","type":"fixed"},
+         {"name": "Letter 3","date":"2012-03-29","id":3,"from":"R","type":"hasAnswer"},
+         {"name": "Letter 4","date":"2012-03-30","id":4,"from":"R","type":"fixed"},
+         {"name": "Letter 5","date":"2012-03-30","id":5,"from":"R","type":"fixed"},
+         {"name": "Letter 6","date":"2012-04-01","id":6,"from":"F","type":"fixed"},
+         {"name": "Letter 7","date":"2012-04-02","id":7,"from":"F","type":"both"},
+         {"name": "Letter 8","date":"2012-03-30","id":7,"from":"R","type":"free"},
+         {"name": "Letter 9","date":"2012-04-01","id":7,"from":"R","type":"isAnswer"},
+         {"name": "Letter 8a","date":"2012-03-30","id":7,"from":"R","type":"free"},
+         {"name": "Letter 8b","date":"2012-04-02","id":7,"from":"R","type":"free"},
       ],
       
       links: [
@@ -57,21 +57,34 @@ function loadchart(div){
 
 		
       var x = d3.time.scale()
-      .domain([earliest, d3.time.day.offset(latest, 1)])
-      .rangeRound([0, width - margin.left - margin.right]);
+		.domain([earliest, d3.time.day.offset(latest, 1)])
+		.rangeRound([0, width - margin.left - margin.right]);
       
-      var xAxis = d3.svg.axis()
-      .scale(x)
-      .orient('bottom')
-      .ticks(d3.time.days, 1)
-      .tickFormat(d3.time.format('%a %d'))
-      .tickSize(5)
-      .tickPadding(8);
+      var xAxisDays = d3.svg.axis()
+		.scale(x)
+		.orient('bottom')
+		.ticks(d3.time.days, 1)
+		.tickFormat(d3.time.format('%a %-e'))
+		.tickSize(5)
+		.tickPadding(8);
+      
+      var xAxisMonths = d3.svg.axis()
+      	.scale(x)
+		.orient("bottom")
+		.ticks(d3.time.months, 1)
+		.tickFormat(d3.time.format("%B %Y"))
+		.tickSize(5,0);
+
 
      svg.append('g')
-      .attr('class', 'x axis')
+      .attr('class', 'x axis monthaxis')
       .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
-      .call(xAxis);
+      .attr('style', 'opacity: 0.1')
+      .call(xAxisMonths);
+     svg.append('g')
+      .attr('class', 'x axis dayaxis')
+      .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
+      .call(xAxisDays);
 
 		// add fixed coords to nodes
 		var stackcounts = [];

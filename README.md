@@ -11,7 +11,8 @@ no links, they float to the top.
 
 All letters must have a date, which is used for positioning.
 
-In the example, the colour of the circle indicates the author of the letter. The border of the 
+In the [example](http://htmlpreview.github.io/?https://raw.github.com/pbinkley/D3-dateline/master/index.html), 
+the colour of the circle indicates the author of the letter. The border of the 
 circle is black if the letter is dated and red if it isn't. The arrow links point from a letter 
 to its answer.
 

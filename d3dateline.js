@@ -1,4 +1,5 @@
-function loadchart(div){
+function loadchart(div, json){
+	// pass in id of div where the svg will live and name/url of json data
   	var dayWidth = 100,
     	height = 200,
 		margin = {top: 40, right: 40, bottom: 0, left:40},
@@ -12,40 +13,16 @@ function loadchart(div){
 	var ctlx = 10;
 	var ctly = 35;
 
-      
-	var dataSet = {
-	// nodes should be in date order - time scale domain depends on first and last node
-		nodes: [
-         {"name": "Letter 1","date":"2012-03-27","id":1,"from":"R","type":"fixed"},
-         {"name": "Letter 2","date":"2012-03-30","id":2,"from":"F","type":"fixed"},
-         {"name": "Letter 3","date":"2012-03-29","id":3,"from":"R","type":"hasAnswer"},
-         {"name": "Letter 4","date":"2012-03-30","id":4,"from":"R","type":"fixed"},
-         {"name": "Letter 5","date":"2012-03-30","id":5,"from":"R","type":"fixed"},
-         {"name": "Letter 6","date":"2012-04-01","id":6,"from":"F","type":"fixed"},
-         {"name": "Letter 7","date":"2012-04-02","id":7,"from":"F","type":"both"},
-         {"name": "Letter 8","date":"2012-03-30","id":7,"from":"R","type":"free"},
-         {"name": "Letter 9","date":"2012-04-01","id":7,"from":"R","type":"isAnswer"},
-         {"name": "Letter 8a","date":"2012-03-30","id":7,"from":"R","type":"free"},
-         {"name": "Letter 8b","date":"2012-04-02","id":7,"from":"R","type":"free"},
-      ],
-      
-      links: [
-      // type attribute is not used yet
-         {"source":1, "target":3, "type": "answeredby"},
-         {"source":0, "target":6, "type": "answeredby"},
-         {"source":6, "target":4, "type": "answeredby"},
-         {"source":2, "target":5, "type": "answered§by"},
-         {"source":5, "target":8, "type": "answeredby"}
-      ]
-			
-		};
-		
-		
+      d3.json(json, function(error, graph) {
+
 		var line = d3.svg.line()
 
-		var earliest = new Date(dataSet.nodes[0].date);
-		var latest = new Date(dataSet.nodes[dataSet.nodes.length - 1].date);
+		var earliest = new Date(graph.nodes[0].date);
+		// TODO discover latest by looking rather than assuming the nodes are sorted
+		var latest = new Date(graph.nodes[graph.nodes.length - 1].date);
+		// number of days in the data set ...
 		var interval = (latest - earliest) / 1000 / 60 / 60 / 24 + 1;
+		// ... determines the width of the svg
 		var width = interval * dayWidth;
 
 	var svg = d3.select("#" + div)
@@ -89,7 +66,7 @@ function loadchart(div){
 		// add fixed coords to nodes
 		var stackcounts = [];
 
-		 dataSet.nodes.forEach(function(node) {
+		 graph.nodes.forEach(function(node) {
 		 // x is always over the sortdate
 		 // y is stacked on any letters already on that date if the date is precise,
 		 //   otherwise at top of graph to allow it to be pulled into position
@@ -106,8 +83,8 @@ function loadchart(div){
 		});
 
 		var force = self.force = d3.layout.force()
-			.nodes(dataSet.nodes)
-			.links(dataSet.links)
+			.nodes(graph.nodes)
+			.links(graph.links)
 			.gravity(0)
             .distance(40)
             .charge(7)
@@ -158,7 +135,7 @@ svg.append("svg:defs").selectAll("marker")
     .attr("d", "M0,-5L10,0L0,5");
     
 		var link = svg.selectAll(".link")
-				.data(dataSet.links)
+				.data(graph.links)
 			.enter().append("svg:path")
 			.attr("d", function(d) {
 				return curve(d);
@@ -167,7 +144,7 @@ svg.append("svg:defs").selectAll("marker")
 			.attr("marker-end", "url(#end)");
 
        var node = svg.selectAll("circle")
-			.data(dataSet.nodes)
+			.data(graph.nodes)
 		.enter().append("svg:circle")
 			.attr('id', function(d) {return "n" + d.id; })
 			.attr('class', function(d) { return "letter d" + d.date + " from" + d.from + " " + ((d.type == "fixed") ? "precise" : "notprecise"); })
@@ -181,7 +158,7 @@ svg.append("svg:defs").selectAll("marker")
 		function tick(e) {
 			// artificial gravity, based on node type
 			var k = 20 * e.alpha;
-			dataSet.nodes.forEach(function(o, i) {
+			graph.nodes.forEach(function(o, i) {
 				if (o.type == "isAnswer") // move right
 					o.x += k;
 				else if (o.type == "hasAnswer") // move left
@@ -197,5 +174,6 @@ svg.append("svg:defs").selectAll("marker")
 			link.attr("d", function(d) {
 				return curve(d);
             });			
-		};
-	};
+		}
+	});
+}

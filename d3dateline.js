@@ -78,6 +78,7 @@ function loadchart(div, json){
 	         	node.fixed = true;
          	}
          	else {
+         		// TODO offset x slightly
          		node.y = 0;
          	}
 		});
@@ -86,8 +87,8 @@ function loadchart(div, json){
 			.nodes(graph.nodes)
 			.links(graph.links)
 			.gravity(0)
+            .charge(0.1)
             .distance(40)
-            .charge(7)
 			.size([width,height])
 			.start();
 
@@ -155,6 +156,34 @@ svg.append("svg:defs").selectAll("marker")
   
 		force.on("tick", tick);
 
+// Resolves collisions between d and all other circles.
+function collide(node) {
+  var r = radius + 8,
+      nx1 = node.x - r,
+      nx2 = node.x + r,
+      ny1 = node.y - r,
+      ny2 = node.y + r;
+  return function(quad, x1, y1, x2, y2) {
+    if (quad.point && (quad.point !== node)) {
+      var x = node.x - quad.point.x,
+          y = node.y - quad.point.y,
+          l = Math.sqrt(x * x + y * y),
+          r = radius + radius;
+      if (l < r) {
+        l = (l - r) / l * .5;
+        node.x -= x *= l;
+        node.y -= y *= l;
+        quad.point.x += x;
+        quad.point.y += y;
+      }
+    }
+    return x1 > nx2
+        || x2 < nx1
+        || y1 > ny2
+        || y2 < ny1;
+  };
+}
+
 		function tick(e) {
 			// artificial gravity, based on node type
 			var k = 20 * e.alpha;
@@ -166,6 +195,16 @@ svg.append("svg:defs").selectAll("marker")
 				else if (o.type == "free") // move up
 					o.y += -k;
 			});
+
+ var q = d3.geom.quadtree(graph.nodes),
+      i = 0,
+      n = graph.nodes.length;
+
+
+  while (++i < n) {
+    q.visit(collide(graph.nodes[i]));
+  }
+
 
 			// constrain to bounding box
 			node.attr("cx", function(d) { return d.x = Math.max(15, Math.min(width - 15, d.x)); })

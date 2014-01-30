@@ -150,9 +150,12 @@ function loadchart(div, json) {
             }
         });
 
-        var node = svg.selectAll("circle")
-            .data(graph.nodes)
-            .enter().append("svg:circle")
+		var node = svg.selectAll(".node")
+			.data(graph.nodes)
+			.enter().append("g")
+			.attr("class", "node");
+
+        var circle = node.append("svg:circle")
             .attr('id', function (d) {
                 return "n" + d.id;
             })
@@ -167,14 +170,16 @@ function loadchart(div, json) {
                 return d.name;
             });
 
-        // on click, display item text in iframe
-        node.on("click", function (d) {
-            d3.xhr("item/" + d.id + "-full.html", function (error, xh) {
-                // xh is an XMLHttpRequest object 
-                document.getElementById("item").innerHTML = "<p><a href='result.html?q=id%3A" + 
-                	d.id + "&field=body'>Doc. " + d.name + "</a></p>" + xh.response;
-            });
-        });
+		// text, centered in node, with white shadow for legibility
+		node.append("text")
+			.attr("text-anchor", "middle")
+			.attr("dy", radius / 2)
+			.attr("class", "shadow")
+			.text(function(d) { return d.id });
+		node.append("text")
+			.attr("text-anchor", "middle")
+			.attr("dy", radius / 2)
+			.text(function(d) { return d.id });
 
         // Resolves collisions between d and all other circles.
         function collide(node) {
@@ -235,10 +240,12 @@ function loadchart(div, json) {
                 q.visit(collide(graph.nodes[i]));
             }
 
+			node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
             // constrain to bounding box
             node.attr("cx", function (d) {
                 return d.x = Math.max(15, Math.min(width - 15, d.x));
-            })
+            	})
                 .attr("cy", function (d) {
                     return d.y = Math.max(15, Math.min(height - 15, d.y));
                 });

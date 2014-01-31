@@ -62,6 +62,10 @@
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<script src="d3dateline.js"></script>
 	<script>
+		function itemclick(d) {
+			// this function will be called when a node is clicked
+			alert(d.id);
+		}
 		window.onload = function() {
 			loadchart("svgContent", "demodata.json");
 		}

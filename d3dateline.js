@@ -181,6 +181,14 @@ function loadchart(div, json) {
 			.attr("dy", radius / 2)
 			.text(function(d) { return d.id });
 
+		// on click, do something with id
+		// implement this in a function outside this block
+		
+        node.on("click", function (d) {
+        	itemclick(d);
+        });
+
+
         // Resolves collisions between d and all other circles.
         function collide(node) {
             var r = radius + 8,
